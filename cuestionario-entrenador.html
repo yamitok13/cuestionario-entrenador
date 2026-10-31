@@ -1,0 +1,368 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>Cuestionario: tu web y tu app</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link href="https://fonts.googleapis.com/css2?family=Barlow+Condensed:wght@600;800&family=Barlow:wght@400;500;600&display=swap" rel="stylesheet">
+<script src="https://cdnjs.cloudflare.com/ajax/libs/jspdf/2.5.1/jspdf.umd.min.js"></script>
+<style>
+:root{
+  color-scheme: light;
+  --bg:#E9ECEF; --surface:#FFFFFF; --ink:#18202A; --muted:#5A6572; --line:#CDD3DA;
+  --accent:#D7322A; --accent-ink:#FFFFFF; --chip:#F3F5F7;
+  --p1:#D7322A; --p2:#2C6BD8; --p3:#E8AE00; --p4:#2A9356; --p5:#3A424C; --bar:#8A939D;
+}
+@media (prefers-color-scheme: dark){
+  :root{
+    color-scheme: dark;
+    --bg:#12171D; --surface:#1B222A; --ink:#E8ECF0; --muted:#9AA5B1; --line:#2E3742;
+    --accent:#FF5247; --accent-ink:#12171D; --chip:#232B34; --p5:#C9D1D9; --bar:#6B7580;
+  }
+}
+*{box-sizing:border-box}
+html,body{margin:0}
+body{
+  background:var(--bg); color:var(--ink);
+  font-family:"Barlow",system-ui,-apple-system,"Segoe UI",sans-serif;
+  font-size:17px; line-height:1.5;
+}
+.wrap{max-width:640px;margin:0 auto;padding:1.25rem 1rem 7rem}
+header{padding:.5rem 0 1rem}
+h1,h2{font-family:"Barlow Condensed","Arial Narrow",sans-serif;line-height:1.02;margin:0}
+h1{font-size:clamp(2.4rem,9vw,3.4rem);font-weight:800;letter-spacing:-.01em}
+.intro{color:var(--muted);margin:.75rem 0 0;max-width:34em}
+
+.bar-box{margin:1.5rem 0 .5rem}
+.barbell{width:100%;height:auto;display:block}
+.plate{transform-box:fill-box;transform-origin:center;transform:scaleY(0);opacity:0;
+  transition:transform .35s cubic-bezier(.3,1.4,.5,1),opacity .2s}
+.plate.on{transform:scaleY(1);opacity:1}
+.step-label{font-family:"Barlow Condensed",sans-serif;font-weight:600;font-size:1.15rem;color:var(--muted);margin:.25rem 0 0;text-align:center}
+
+.panel{background:var(--surface);border-radius:18px;padding:1.5rem 1.25rem;margin-top:1rem}
+.panel h2{font-size:2rem;font-weight:800}
+.panel .lead{color:var(--muted);margin:.35rem 0 0}
+.q{display:block;margin-top:1.75rem;border:0;padding:0}
+.ql{display:block;font-weight:600;margin-bottom:.5rem}
+.hint{display:block;color:var(--muted);font-size:.92rem;margin:-.3rem 0 .55rem}
+input[type=text],textarea{
+  width:100%;font:inherit;color:var(--ink);background:var(--chip);
+  border:1.5px solid var(--line);border-radius:10px;padding:.7rem .85rem;
+}
+textarea{min-height:6.5rem;resize:vertical}
+input[type=text]:focus,textarea:focus{outline:none;border-color:var(--accent);box-shadow:0 0 0 3px color-mix(in srgb,var(--accent) 25%,transparent)}
+.chips{display:flex;flex-wrap:wrap;gap:.5rem}
+.chip{position:relative}
+.chip input{position:absolute;opacity:0;width:1px;height:1px}
+.chip span{display:inline-block;padding:.5rem .95rem;border:1.5px solid var(--line);border-radius:999px;background:var(--chip);cursor:pointer;user-select:none;font-weight:500}
+.chip input:checked + span{background:var(--ink);color:var(--surface);border-color:var(--ink)}
+.chip input:focus-visible + span{outline:3px solid var(--accent);outline-offset:2px}
+.other{margin-top:.6rem}
+.error{color:var(--accent);font-weight:600;font-size:.95rem;margin:.4rem 0 0}
+legend{padding:0}
+
+.nav{position:fixed;left:0;right:0;bottom:0;background:color-mix(in srgb,var(--bg) 88%,transparent);
+  backdrop-filter:blur(8px);border-top:1px solid var(--line)}
+.nav-in{max-width:640px;margin:0 auto;padding:.8rem 1rem calc(.8rem + env(safe-area-inset-bottom));display:flex;gap:.75rem}
+button{font:inherit;font-weight:600;border-radius:12px;padding:.85rem 1.2rem;cursor:pointer;border:1.5px solid var(--line);background:var(--surface);color:var(--ink)}
+button.primary{background:var(--accent);border-color:var(--accent);color:var(--accent-ink);flex:1}
+button:focus-visible{outline:3px solid var(--ink);outline-offset:2px}
+button[hidden]{display:none}
+
+.sum h3{font-family:"Barlow Condensed",sans-serif;font-size:1.4rem;margin:1.6rem 0 .3rem}
+.sum dl{margin:0}
+.sum dt{font-weight:600;margin-top:.7rem;font-size:.95rem}
+.sum dd{margin:.1rem 0 0;color:var(--muted);white-space:pre-wrap}
+.actions{display:flex;flex-direction:column;gap:.7rem;margin-top:1.75rem}
+.actions button{width:100%}
+.done{margin-top:1rem;color:var(--muted)}
+
+@media (prefers-reduced-motion: reduce){.plate{transition:none}}
+</style>
+</head>
+<body>
+<div class="wrap">
+  <header>
+    <h1>Tu web y tu app, a tu medida</h1>
+    <p class="intro">Estas preguntas me ayudan a entender cómo trabajas y qué necesitas. No hay respuestas correctas, y puedes saltarte las que no tengas claras. Al terminar, descarga el PDF y envíamelo.</p>
+    <div class="bar-box" aria-hidden="true">
+      <svg class="barbell" viewBox="0 0 360 76" id="barbell"></svg>
+    </div>
+    <p class="step-label" id="stepLabel" aria-live="polite"></p>
+  </header>
+
+  <main id="steps"></main>
+</div>
+
+<nav class="nav">
+  <div class="nav-in">
+    <button type="button" id="back">Atrás</button>
+    <button type="button" class="primary" id="next">Siguiente</button>
+  </div>
+</nav>
+
+<script>
+const SECTIONS = [
+  { title:"Tú y tu forma de entrenar", lead:"Para que la web hable como tú y llegue a quien quieres.", qs:[
+    {id:"nombre", type:"text", label:"Tu nombre", required:true},
+    {id:"marca", type:"text", label:"Nombre comercial o marca", hint:"Si todavía no tienes, déjalo en blanco."},
+    {id:"donde", type:"text", label:"¿Dónde entrenas a tus clientes?", hint:"Gimnasio, barrio, ciudad…"},
+    {id:"modalidad", type:"single", label:"¿Cómo entrenas?", options:["Presencial","Online","Las dos"]},
+    {id:"especialidad", type:"multi", other:true, label:"¿En qué te especializas?", options:["Pérdida de grasa","Fuerza","Hipertrofia","Readaptación de lesiones","Personas mayores","Embarazo y posparto","Rendimiento deportivo"]},
+    {id:"publico", type:"textarea", label:"Describe a tu cliente ideal", hint:"Edad, objetivos, qué le preocupa o qué le frena."},
+    {id:"diferencia", type:"textarea", label:"¿Qué te diferencia de otros entrenadores?"}
+  ]},
+  { title:"Tu negocio hoy", lead:"Dónde estás ahora y hacia dónde quieres ir.", qs:[
+    {id:"clientes", type:"single", label:"¿Cuántos clientes tienes ahora?", options:["Menos de 10","Entre 10 y 25","Entre 25 y 50","Más de 50"]},
+    {id:"servicios", type:"textarea", label:"Servicios que ofreces y precio aproximado de cada uno", hint:"Por ejemplo: sesión suelta, bono de 10 sesiones, plan online mensual…"},
+    {id:"captacion", type:"multi", other:true, label:"¿Cómo te llegan los clientes ahora?", options:["Instagram","TikTok","Boca a boca","El propio gimnasio","Google","WhatsApp"]},
+    {id:"redes", type:"text", label:"Tus redes sociales", hint:"Usuario o enlace de cada una."},
+    {id:"objetivo", type:"textarea", label:"¿Dónde te gustaría estar dentro de un año?"}
+  ]},
+  { title:"Tu web", lead:"Lo que verá alguien que todavía no te conoce.", qs:[
+    {id:"objetivoWeb", type:"single", label:"¿Qué es lo más importante que debe conseguir tu web?", options:["Conseguir clientes nuevos","Dar imagen profesional","Vender planes online","Todo lo anterior"]},
+    {id:"landing", type:"textarea", label:"¿Qué te gusta y qué no de tu página actual?"},
+    {id:"secciones", type:"multi", label:"¿Qué quieres que tenga?", options:["Sobre mí","Servicios","Precios","Testimonios","Antes y después","Fotos y vídeos","Preguntas frecuentes","Reservar una sesión","Botón de WhatsApp","Blog o consejos"]},
+    {id:"material", type:"multi", label:"¿Qué material tienes ya?", options:["Fotos profesionales mías","Vídeos entrenando","Testimonios de clientes","Fotos de antes y después con permiso","Logo","Colores de marca","Nada todavía"]},
+    {id:"estilo", type:"single", label:"¿Qué sensación quieres transmitir?", options:["Energía e intensidad","Limpio y minimalista","Premium y exclusivo","Cercano y familiar"]},
+    {id:"referencias", type:"textarea", label:"Webs o perfiles que te gusten y por qué", hint:"De entrenadores o de cualquier otra cosa."},
+    {id:"correo", type:"single", label:"¿Usas un correo con tu dominio?", hint:"Por ejemplo, info@tudominio.com", options:["Sí","No","No lo sé"]}
+  ]},
+  { title:"La app para tus clientes", lead:"Lo que harán tus clientes y lo que quieres controlar tú.", qs:[
+    {id:"funciones", type:"multi", other:true, label:"¿Qué podrán hacer tus clientes en la app?", options:["Ver su rutina del día","Vídeos de cada ejercicio","Apuntar pesos y repeticiones","Registrar peso y medidas","Subir fotos de progreso","Plan de alimentación","Reservar sesiones","Pagar desde la app","Chatear contigo","Recibir recordatorios"]},
+    {id:"rutinasHoy", type:"single", other:true, label:"¿Cómo preparas y envías las rutinas hoy?", options:["En papel","Excel o PDF","Por WhatsApp","Con otra app"]},
+    {id:"seguimiento", type:"multi", label:"¿Qué quieres ver tú del progreso de cada cliente?", options:["Si cumple los entrenamientos","Evolución de cargas","Peso y medidas","Fotos de progreso","Gráficas de evolución","Sensaciones y comentarios"]},
+    {id:"salud", type:"single", label:"¿Guardarás datos de salud de tus clientes?", hint:"Lesiones, patologías, medicación…", options:["Sí","No","No lo sé"]},
+    {id:"apps", type:"single", label:"¿Usas o has usado alguna app para entrenadores?", hint:"Son apps donde el entrenador crea las rutinas y sus clientes las siguen desde el móvil, por ejemplo Harbiz o Trainerize.", options:["Sí, uso una ahora","La probé y la dejé","Nunca he usado ninguna"]},
+    {id:"appsDetalle", type:"textarea", label:"Si has usado alguna, ¿cuál era? ¿Qué te gustó y qué echaste en falta?", hint:"Si no has usado ninguna, déjalo en blanco."},
+    {id:"imprescindible", type:"textarea", label:"Si la app solo pudiera hacer una cosa, ¿cuál sería?"}
+  ]},
+  { title:"Presupuesto y plazos", lead:"Para elegir la solución que encaje contigo.", qs:[
+    {id:"mensual", type:"single", label:"¿Cuánto podrías pagar al mes en herramientas?", hint:"Hosting, app de clientes, reservas…", options:["Nada","Hasta 20 €","Entre 20 y 50 €","Más de 50 €"]},
+    {id:"plazo", type:"single", label:"¿Para cuándo te gustaría tenerla?", options:["Lo antes posible","En uno o dos meses","Sin prisa"]},
+    {id:"actualiza", type:"single", label:"¿Quién actualizará textos, fotos y precios?", options:["Yo mismo","Otra persona","Entre los dos"]},
+    {id:"comentarios", type:"textarea", label:"¿Algo más que quieras contarme?"}
+  ]}
+];
+
+const PLATE_COLORS = ["--p1","--p2","--p3","--p4","--p5"];
+const stepsEl = document.getElementById("steps");
+const backBtn = document.getElementById("back");
+const nextBtn = document.getElementById("next");
+const stepLabel = document.getElementById("stepLabel");
+let step = 0;
+
+const esc = s => String(s).replace(/[&<>"']/g, c => ({"&":"&amp;","<":"&lt;",">":"&gt;",'"':"&quot;","'":"&#39;"}[c]));
+
+function fieldHTML(q){
+  const hint = q.hint ? `<span class="hint">${esc(q.hint)}</span>` : "";
+  if(q.type === "text" || q.type === "textarea"){
+    const input = q.type === "text"
+      ? `<input type="text" id="${q.id}" name="${q.id}" autocomplete="off">`
+      : `<textarea id="${q.id}" name="${q.id}"></textarea>`;
+    return `<label class="q" for="${q.id}"><span class="ql">${esc(q.label)}</span>${hint}${input}</label>
+      ${q.required ? `<p class="error" id="${q.id}-err" hidden>Escribe tu nombre para seguir.</p>` : ""}`;
+  }
+  const kind = q.type === "single" ? "radio" : "checkbox";
+  const chips = q.options.map(o =>
+    `<label class="chip"><input type="${kind}" name="${q.id}" value="${esc(o)}"><span>${esc(o)}</span></label>`).join("");
+  const other = q.other ? `<input type="text" class="other" name="${q.id}__other" placeholder="Otro: escríbelo aquí" aria-label="Otra opción">` : "";
+  return `<fieldset class="q"><legend class="ql">${esc(q.label)}</legend>${hint}<div class="chips">${chips}</div>${other}</fieldset>`;
+}
+
+function build(){
+  stepsEl.innerHTML = SECTIONS.map((s,i) => `
+    <section class="panel" data-step="${i}" hidden>
+      <h2>${esc(s.title)}</h2>
+      <p class="lead">${esc(s.lead)}</p>
+      ${s.qs.map(fieldHTML).join("")}
+    </section>`).join("") + `
+    <section class="panel sum" data-step="${SECTIONS.length}" hidden>
+      <h2>Repasa tus respuestas</h2>
+      <p class="lead">Si quieres cambiar algo, vuelve atrás. Cuando esté listo, descarga el PDF y envíamelo.</p>
+      <div id="summary"></div>
+      <div class="actions">
+        <button type="button" class="primary" id="pdfBtn">Descargar PDF</button>
+        <button type="button" id="shareBtn" hidden>Enviar PDF por WhatsApp u otra app</button>
+      </div>
+      <p class="done" id="doneMsg" aria-live="polite"></p>
+    </section>`;
+  document.getElementById("pdfBtn").addEventListener("click", downloadPDF);
+  document.getElementById("shareBtn").addEventListener("click", sharePDF);
+  checkShare();
+}
+
+function buildBarbell(){
+  const svg = document.getElementById("barbell");
+  const heights = [66,60,54,48,42];
+  let plates = "";
+  heights.forEach((h,i) => {
+    const y = 38 - h/2;
+    const col = `var(${PLATE_COLORS[i]})`;
+    plates += `<rect class="plate" data-i="${i}" x="${112 - 14 - i*14}" y="${y}" width="12" height="${h}" rx="3" fill="${col}"/>`;
+    plates += `<rect class="plate" data-i="${i}" x="${236 + 14 + i*14}" y="${y}" width="12" height="${h}" rx="3" fill="${col}"/>`;
+  });
+  svg.innerHTML = `
+    <rect x="4" y="35" width="352" height="6" rx="3" fill="var(--bar)"/>
+    <rect x="112" y="29" width="8" height="18" rx="2" fill="var(--bar)"/>
+    <rect x="240" y="29" width="8" height="18" rx="2" fill="var(--bar)"/>
+    <rect x="150" y="33" width="60" height="10" rx="2" fill="var(--line)"/>
+    ${plates}`;
+}
+
+function show(n){
+  step = n;
+  document.querySelectorAll("[data-step]").forEach(el => el.hidden = Number(el.dataset.step) !== n);
+  document.querySelectorAll(".plate").forEach(p => p.classList.toggle("on", Number(p.dataset.i) < n));
+  const last = n === SECTIONS.length;
+  stepLabel.textContent = last ? "Bloques completados: 5 de 5" : `Bloque ${n+1} de ${SECTIONS.length}: ${SECTIONS[n].title}`;
+  backBtn.hidden = n === 0;
+  nextBtn.hidden = last;
+  nextBtn.textContent = n === SECTIONS.length - 1 ? "Ver resumen" : "Siguiente";
+  if(last) renderSummary();
+  window.scrollTo({top:0, behavior: matchMedia("(prefers-reduced-motion: reduce)").matches ? "auto" : "smooth"});
+}
+
+function collect(){
+  const data = {};
+  SECTIONS.forEach(s => s.qs.forEach(q => {
+    if(q.type === "text" || q.type === "textarea"){
+      data[q.id] = document.getElementById(q.id).value.trim();
+    } else {
+      const vals = [...document.querySelectorAll(`input[name="${q.id}"]:checked`)].map(i => i.value);
+      if(q.other){
+        const o = document.querySelector(`input[name="${q.id}__other"]`).value.trim();
+        if(o) vals.push(`Otro: ${o}`);
+      }
+      data[q.id] = vals;
+    }
+  }));
+  return data;
+}
+
+const fmt = v => Array.isArray(v) ? v.join(", ") : (v || "");
+
+function renderSummary(){
+  const data = collect();
+  document.getElementById("summary").innerHTML = SECTIONS.map(s => `
+    <h3>${esc(s.title)}</h3>
+    <dl>${s.qs.map(q => `<dt>${esc(q.label)}</dt><dd>${esc(fmt(data[q.id]) || "Sin responder")}</dd>`).join("")}</dl>`).join("");
+}
+
+function validate(){
+  if(step !== 0) return true;
+  const input = document.getElementById("nombre");
+  const err = document.getElementById("nombre-err");
+  const ok = input.value.trim() !== "";
+  err.hidden = ok;
+  if(!ok) input.focus();
+  return ok;
+}
+
+function fileName(){
+  const n = (document.getElementById("nombre").value.trim() || "entrenador")
+    .normalize("NFD").replace(/[\u0300-\u036f]/g,"").toLowerCase().replace(/[^a-z0-9]+/g,"-").replace(/^-|-$/g,"");
+  return `cuestionario-web-${n}.pdf`;
+}
+
+function makePDF(){
+  const { jsPDF } = window.jspdf;
+  const doc = new jsPDF({unit:"mm", format:"a4"});
+  const W = 210, M = 18, CW = W - 2*M, BOTTOM = 280;
+  const data = collect();
+  const fecha = new Date().toLocaleDateString("es-ES", {day:"numeric", month:"long", year:"numeric"});
+  let y;
+
+  const ensure = h => { if(y + h > BOTTOM){ doc.addPage(); y = 20; } };
+
+  doc.setFillColor(215,50,42);
+  doc.rect(0,0,W,30,"F");
+  doc.setTextColor(255,255,255);
+  doc.setFont("helvetica","bold"); doc.setFontSize(19);
+  doc.text("Cuestionario: tu web y tu app", M, 14);
+  doc.setFont("helvetica","normal"); doc.setFontSize(10.5);
+  doc.text(`${data.nombre || "Sin nombre"}${data.marca ? " (" + data.marca + ")" : ""}   |   ${fecha}`, M, 22);
+  y = 42;
+
+  SECTIONS.forEach((s,i) => {
+    ensure(18);
+    doc.setTextColor(215,50,42);
+    doc.setFont("helvetica","bold"); doc.setFontSize(13.5);
+    doc.text(`${i+1}. ${s.title}`, M, y);
+    y += 2.5;
+    doc.setDrawColor(215,50,42); doc.setLineWidth(0.4);
+    doc.line(M, y, W - M, y);
+    y += 7;
+
+    s.qs.forEach(q => {
+      const label = doc.splitTextToSize(q.label, CW);
+      const ansText = fmt(data[q.id]);
+      doc.setFontSize(10.5);
+      const ans = doc.splitTextToSize(ansText || "Sin responder", CW);
+      ensure(label.length*5 + 6);
+      doc.setFont("helvetica","bold"); doc.setTextColor(30,36,44);
+      label.forEach(l => { doc.text(l, M, y); y += 5; });
+      doc.setFont("helvetica","normal");
+      if(ansText) doc.setTextColor(60,68,78); else doc.setTextColor(150,156,164);
+      ans.forEach(l => { ensure(5); doc.text(l, M, y); y += 5; });
+      y += 4;
+    });
+    y += 4;
+  });
+
+  const pages = doc.getNumberOfPages();
+  for(let p = 1; p <= pages; p++){
+    doc.setPage(p);
+    doc.setFontSize(9); doc.setTextColor(150,156,164); doc.setFont("helvetica","normal");
+    doc.text(`Página ${p} de ${pages}`, W - M, 290, {align:"right"});
+  }
+  return doc;
+}
+
+function downloadPDF(){
+  const msg = document.getElementById("doneMsg");
+  if(!window.jspdf){
+    msg.textContent = "No se pudo cargar el generador de PDF. Revisa tu conexión a internet y vuelve a intentarlo.";
+    return;
+  }
+  makePDF().save(fileName());
+  msg.textContent = "PDF descargado. Ahora solo tienes que enviármelo.";
+}
+
+async function checkShare(){
+  try{
+    const test = new File(["x"], "test.pdf", {type:"application/pdf"});
+    if(navigator.canShare && navigator.canShare({files:[test]})){
+      document.getElementById("shareBtn").hidden = false;
+    }
+  }catch(e){}
+}
+
+async function sharePDF(){
+  const msg = document.getElementById("doneMsg");
+  if(!window.jspdf){
+    msg.textContent = "No se pudo cargar el generador de PDF. Revisa tu conexión a internet y vuelve a intentarlo.";
+    return;
+  }
+  const blob = makePDF().output("blob");
+  const file = new File([blob], fileName(), {type:"application/pdf"});
+  try{
+    await navigator.share({files:[file], title:"Cuestionario: tu web y tu app"});
+    msg.textContent = "PDF enviado. ¡Gracias!";
+  }catch(e){
+    if(e.name !== "AbortError") msg.textContent = "No se pudo compartir. Usa “Descargar PDF” y envíalo desde tus archivos.";
+  }
+}
+
+nextBtn.addEventListener("click", () => { if(validate()) show(step + 1); });
+backBtn.addEventListener("click", () => show(step - 1));
+
+build();
+buildBarbell();
+show(0);
+</script>
+</body>
+</html>
